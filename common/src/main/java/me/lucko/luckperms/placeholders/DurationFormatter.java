@@ -43,10 +43,17 @@ class DurationFormatter {
     public static final DurationFormatter CONCISE = new DurationFormatter(true);
     public static final DurationFormatter CONCISE_LOW_ACCURACY = new DurationFormatter(true, 3);
 
-    private static final ChronoUnit[] UNITS = new ChronoUnit[]{
+    public static final ChronoUnit[] FULL_UNITS = new ChronoUnit[]{
             ChronoUnit.YEARS,
             ChronoUnit.MONTHS,
             ChronoUnit.WEEKS,
+            ChronoUnit.DAYS,
+            ChronoUnit.HOURS,
+            ChronoUnit.MINUTES,
+            ChronoUnit.SECONDS
+    };
+
+    public static final ChronoUnit[] DAY_UNITS = new ChronoUnit[]{
             ChronoUnit.DAYS,
             ChronoUnit.HOURS,
             ChronoUnit.MINUTES,
@@ -72,54 +79,55 @@ class DurationFormatter {
      * @return the formatted string
      */
     public String format(Duration duration) {
+        return this.format(FULL_UNITS, duration);
+    }
+
+    /**
+     * Formats {@code duration} as a string.
+     *
+     * @param units the units to formatting duration
+     * @param duration the duration
+     * @return the formatted string
+     */
+    public String format(ChronoUnit[] units, Duration duration) {
         long seconds = duration.getSeconds();
-        StringBuilder builder = new StringBuilder();
-        int outputSize = 0;
 
-        for (ChronoUnit unit : UNITS) {
+        for (ChronoUnit unit : units) {
             long n = seconds / unit.getDuration().getSeconds();
-            if (n > 0) {
-                seconds -= unit.getDuration().getSeconds() * n;
-                if (outputSize != 0) {
-                    builder.append(' ');
-                }
-                builder.append(formatPart(n, unit));
-                outputSize++;
+
+            if (n <= 0) {
+                continue;
             }
-            if (seconds <= 0 || outputSize >= this.accuracy) {
-                break;
-            }
+
+            return formatPart(n, unit);
         }
 
-        if (outputSize == 0) {
-            return formatPart(0, ChronoUnit.SECONDS);
-        }
-        return builder.toString();
+        return formatPart(0, ChronoUnit.SECONDS);
     }
 
     // Taken from https://github.com/lucko/LuckPerms/blob/master/common/src/main/resources/luckperms_en.properties
     private static final Map<String, String> TRANSLATIONS = ImmutableMap.<String, String>builder()
-            .put("luckperms.duration.unit.years.plural", "%s years")
-            .put("luckperms.duration.unit.years.singular", "%s year")
-            .put("luckperms.duration.unit.years.short", "%sy")
-            .put("luckperms.duration.unit.months.plural", "%s months")
-            .put("luckperms.duration.unit.months.singular", "%s month")
-            .put("luckperms.duration.unit.months.short", "%smo")
-            .put("luckperms.duration.unit.weeks.plural", "%s weeks")
-            .put("luckperms.duration.unit.weeks.singular", "%s week")
-            .put("luckperms.duration.unit.weeks.short", "%sw")
-            .put("luckperms.duration.unit.days.plural", "%s days")
-            .put("luckperms.duration.unit.days.singular", "%s day")
-            .put("luckperms.duration.unit.days.short", "%sd")
-            .put("luckperms.duration.unit.hours.plural", "%s hours")
-            .put("luckperms.duration.unit.hours.singular", "%s hour")
-            .put("luckperms.duration.unit.hours.short", "%sh")
-            .put("luckperms.duration.unit.minutes.plural", "%s minutes")
-            .put("luckperms.duration.unit.minutes.singular", "%s minute")
-            .put("luckperms.duration.unit.minutes.short", "%sm")
-            .put("luckperms.duration.unit.seconds.plural", "%s seconds")
-            .put("luckperms.duration.unit.seconds.singular", "%s second")
-            .put("luckperms.duration.unit.seconds.short", "%ss")
+            .put("luckperms.duration.unit.years.plural", "%s лет")
+            .put("luckperms.duration.unit.years.singular", "%s год")
+            .put("luckperms.duration.unit.years.short", "%sг")
+            .put("luckperms.duration.unit.months.plural", "%s месяцев")
+            .put("luckperms.duration.unit.months.singular", "%s месяц")
+            .put("luckperms.duration.unit.months.short", "%sмес")
+            .put("luckperms.duration.unit.weeks.plural", "%s недель")
+            .put("luckperms.duration.unit.weeks.singular", "%s неделя")
+            .put("luckperms.duration.unit.weeks.short", "%sнед")
+            .put("luckperms.duration.unit.days.plural", "%s дней")
+            .put("luckperms.duration.unit.days.singular", "%s день")
+            .put("luckperms.duration.unit.days.short", "%sд")
+            .put("luckperms.duration.unit.hours.plural", "%s часов")
+            .put("luckperms.duration.unit.hours.singular", "%s час")
+            .put("luckperms.duration.unit.hours.short", "%sч")
+            .put("luckperms.duration.unit.minutes.plural", "%s минут")
+            .put("luckperms.duration.unit.minutes.singular", "%s минута")
+            .put("luckperms.duration.unit.minutes.short", "%sм")
+            .put("luckperms.duration.unit.seconds.plural", "%s секунд")
+            .put("luckperms.duration.unit.seconds.singular", "%s секунда")
+            .put("luckperms.duration.unit.seconds.short", "%sс")
             .build();
     
     private String formatPart(long amount, ChronoUnit unit) {

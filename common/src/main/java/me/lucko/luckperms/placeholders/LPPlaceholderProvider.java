@@ -79,7 +79,7 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
     public LPPlaceholderProvider(PlaceholderPlatform platform, LuckPerms luckPerms) {
         this.platform = platform;
         this.luckPerms = luckPerms;
-        
+
         // register placeholders
         PlaceholderBuilder builder = new PlaceholderBuilder();
         setup(builder);
@@ -198,7 +198,7 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
                                 .map(InheritanceNode::getGroupName)
                                 .anyMatch(t::containsGroup)
                         )
-                .orElse(false)
+                        .orElse(false)
         );
 
         builder.addStatic("highest_group_by_weight", (player, user, userData, queryOptions) ->
@@ -372,6 +372,19 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
                         .orElse("")
         );
 
+        builder.addStatic("primary_group_expiry_time", (player, user, userData, queryOptions) ->
+                user.getNodes(NodeType.INHERITANCE).stream()
+                        .filter(Node::hasExpiry)
+                        .filter(n -> n.getGroupName().equals(user.getPrimaryGroup()))
+                        .filter(n -> queryOptions.satisfies(n.getContexts()))
+                        .map(Node::getExpiryDuration)
+                        .filter(Objects::nonNull)
+                        .filter(d -> !d.isNegative())
+                        .findFirst()
+                        .map(this::formatDuration)
+                        .orElse("")
+        );
+
         builder.addDynamic("inherited_group_expiry_time", (player, user, userData, queryOptions, group) ->
                 user.resolveInheritedNodes(queryOptions).stream()
                         .filter(Node::hasExpiry)
@@ -490,7 +503,7 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
         public void addStatic(String id, StaticPlaceholder placeholder) {
             this.placeholders.put(id, placeholder);
         }
-        
+
         public Map<String, Placeholder> build() {
             return ImmutableMap.copyOf(this.placeholders);
         }
